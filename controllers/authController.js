@@ -60,6 +60,76 @@ export const login = async (req, res) => {
   }
 }
 
+// POST /api/auth/signup
+// Body: { name, userId, password }
+export const signup = async (req, res) => {
+  try {
+    const { name, userId, password } = req.body
+
+    // Validate required fields
+    if (!name || !userId || !password) {
+      return res.status(400).json({ message: 'Name, user ID, and password are required' })
+    }
+
+    // Auto-generate email from userId
+    const email = `${userId.toLowerCase()}@artihcus.com`
+
+    // Check if user already exists
+    const existingUserByEmail = await User.findOne({ email })
+    if (existingUserByEmail) {
+      return res.status(400).json({ message: 'User with this user ID already exists' })
+    }
+
+    const existingUserByEmpId = await User.findOne({ empId: userId })
+    if (existingUserByEmpId) {
+      return res.status(400).json({ message: 'User with this user ID already exists' })
+    }
+
+    // Hash password
+    const saltRounds = 10
+    const hashedPassword = await bcrypt.hash(password, saltRounds)
+
+    // Create new user
+    const user = new User({
+      name,
+      email,
+      empId: userId,
+      password: hashedPassword,
+      role: 'employee',
+      isActive: true,
+    })
+
+    await user.save()
+
+    // Generate token
+    const token = generateToken(user._id)
+
+    return res.status(201).json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        empId: user.empId,
+        clientId: user.clientId,
+        role: user.role,
+      },
+    })
+  } catch (error) {
+    console.error('Signup error:', error)
+    
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0]
+      return res.status(400).json({ 
+        message: `User with this ${field === 'empId' ? 'user ID' : field} already exists` 
+      })
+    }
+    
+    return res.status(500).json({ message: 'Server error' })
+  }
+}
+
 
 
 
