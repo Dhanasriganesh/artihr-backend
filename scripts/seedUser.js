@@ -22,7 +22,7 @@ const run = async () => {
     const user = await User.create({
       empId: 'E123',
       clientId: 'C456',
-      email: 'test@example.com',
+      email: 'test@exampl.com',
       name: 'Test User',
       role: 'employee',
       password: hashedPassword,
