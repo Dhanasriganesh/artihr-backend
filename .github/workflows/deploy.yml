@@ -22,24 +22,35 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
+          timeout: 60s
           script: |
+            set -e
+            echo "🚀 Starting deployment..."
+            
             # Navigate to project directory
-            cd /data/apps/hr-portal-backend
+            cd /data/apps/hr-portal-backend || { echo "❌ Directory not found!"; exit 1; }
             
             # Pull latest code from GitHub
-            git pull origin main
+            echo "📥 Pulling latest code..."
+            git pull origin main || { echo "❌ Git pull failed!"; exit 1; }
             
             # Stop existing container
+            echo "🛑 Stopping existing container..."
             docker-compose down || true
             
             # Build and start new container
-            docker-compose up -d --build
+            echo "🔨 Building and starting container..."
+            docker-compose up -d --build || { echo "❌ Docker build failed!"; exit 1; }
+            
+            # Wait a moment for container to start
+            sleep 5
             
             # Clean up old images
-            docker system prune -f
+            echo "🧹 Cleaning up old images..."
+            docker system prune -f || true
             
             # Show deployment status
             echo "✅ Deployment completed!"
-            docker ps | grep hr-portal-backend
-            docker-compose logs --tail=30
+            docker ps | grep hr-portal-backend || echo "⚠️ Container not found in ps"
+            docker-compose logs --tail=30 || echo "⚠️ Could not get logs"
 
