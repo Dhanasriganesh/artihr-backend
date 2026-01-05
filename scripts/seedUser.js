@@ -23,7 +23,7 @@ const run = async () => {
       empId: 'E123',
       clientId: 'C456',
       email: 'test@exmp.com',
-      name: 'Test User',
+      name: 'Test Ur',
       role: 'employee',
       password: hashedPassword,
       isActive: true,
